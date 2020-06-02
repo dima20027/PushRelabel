@@ -5,18 +5,23 @@ int main()
 {
     Graph mg;
     string flink;
-    cout << "Enter file link - ";
-    cin >> flink;
-    try
+    bool ret = true;
+    while (ret == true)
     {
-        mg.addVertexs(flink);
-        mg.addEdge(flink);
+        cout << "Enter file link - ";
+        cin >> flink;
+        try
+        {
+            mg.addVertex(flink);
+            mg.addEdge(flink);
+            ret = false;
+        }
+        catch (invalid_argument error)
+        {
+            cout << error.what() << endl;
+        }
+        cout << endl;
     }
-    catch (invalid_argument error)
-    {
-        cout << error.what() << endl;
-    }
-    cout << endl;
     try
     {
         cout << "maximum flow is " << mg.getMaxFlow();

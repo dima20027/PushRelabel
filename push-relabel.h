@@ -8,11 +8,8 @@ class Graph
 public:
 	Graph();
 	~Graph();
-
-	// возвращает максимальный поток от s до t
 	int getMaxFlow();
-
-	void addVertexs(string filelink)
+	void addVertex(string filelink)
 	{
 		fstream file(filelink, ios::in);
 		if (!file.is_open())
@@ -23,50 +20,52 @@ public:
 		{
 			char symb = ' ';
 			Vertex dt;
+			file.get(symb);
+			bool verNew = true;
+			for (int i = 0; i < vertex.size(); i++)
+			{
+				if (vertex[i].name == symb)
+				{
+					verNew = false;
+					break;
+				}
+			}
+			if (verNew == true)
+			{
+				dt.name = symb;
+				vertex.push_back(dt);
+			}
+			file.get(symb);
+			if (symb != ' ')
+			{
+				throw invalid_argument("Your file not correct!");
+			}
+			file.get(symb);
+			verNew = true;
+			for (int i = 0; i < vertex.size(); i++)
+			{
+				if (vertex[i].name == symb)
+				{
+					verNew = false;
+					break;
+				}
+			}
+			if (verNew == true)
+			{
+				dt.name = symb;
+				vertex.push_back(dt);
+			}
+			while (symb != '\n' && !file.eof())
+			{
 				file.get(symb);
-				bool verNew = true;
-				for (int i = 0; i < ver.size(); i++)
-				{
-					if (ver[i].name == symb)
-					{
-						verNew = false;
-						break;
-					}
-				}
-				if (verNew == true)
-				{
-					dt.name = symb;
-
-					ver.push_back(dt);
-				}
-				file.get(symb);
-				file.get(symb);
-				verNew = true;
-				for (int i = 0; i < ver.size(); i++)
-				{
-					if (ver[i].name == symb)
-					{
-						verNew = false;
-						break;
-					}
-				}
-				if (verNew == true)
-				{
-					dt.name = symb;
-					ver.push_back(dt);
-				}
-				while (symb != '\n' && !file.eof())
-				{
-					file.get(symb);
-				}
+			}
 		}
 		file.close();
-
 	}
 
 	void addEdge(string flink)
 	{
-		if (ver.size() == 0)
+		if (vertex.size() == 0)
 		{
 			throw out_of_range("Error - Vertex no creates");
 		}
@@ -78,18 +77,27 @@ public:
 		while (!file.eof())
 		{
 			Edge dt;
+			char symb;
 			file.get(dt.uName);
-			file.get();
-			file.get(dt.vName);
-			file.get();
-			file >> dt.capacity;
-			for (int i = 0; i < ver.size(); i++)
+			file.get(symb);
+			if (symb != ' ')
 			{
-				if (ver[i].name == dt.uName)
+				throw invalid_argument("Your file not correct!");
+			}
+			file.get(dt.vName);
+			file.get(symb);
+			if (symb != ' ')
+			{
+				throw invalid_argument("Your file not correct!");
+			}
+			file >> dt.capacity;
+			for (int i = 0; i < vertex.size(); i++)
+			{
+				if (vertex[i].name == dt.uName)
 				{
 					dt.uNumb = i;
 				}
-				if (ver[i].name == dt.vName)
+				if (vertex[i].name == dt.vName)
 				{
 					dt.vNumb = i;
 				}
@@ -113,7 +121,7 @@ public:
 	{
 		char name = ' ';
 		int height = 0;
-		int e_flow = 0;
+		int eFlow = 0;
 	};
 
 private:
@@ -127,26 +135,19 @@ private:
 		int vNumb = 0;
 	};
 	OURvector<Edge> edge;
-	OURvector<Vertex> ver;
+	OURvector<Vertex> vertex;
 
-	bool push(int u);
-	// Функция для перемаркировки вершины u
-	void relabel(int u);
-	// Эта функция вызывается для инициализации
-	// предварительный поток
-	void preflow(int s);
-	// Функция для изменения края
+	bool push(int uNumb);
+	void relabel(int uNumb);
+	void preflow(int indexStart);
 	void updateReverseEdgeFlow(int i, int flow);
-
-	// возвращает индекс переполненной вершины
-	int overFlowVertex(OURvector<Vertex>& ver)
+	int overFlowVertex(OURvector<Vertex>& vertex)
 	{
-		for (int i = 1; i < ver.size() - 1; i++)
+		for (int i = 1; i < vertex.size() - 1; i++)
 		{
-			if (ver[i].e_flow > 0)
+			if (vertex[i].eFlow > 0)
 				return i;
 		}
-		// -1 если переполненная вершина отсутствует
 		return -1;
 	}
 
@@ -158,88 +159,64 @@ Graph::~Graph()
 {
 }
 
-void Graph::preflow(int s)
+void Graph::preflow(int indexStart)
 {
-	// Делаем h исходной вершины равным no. вершин
-	// Высота остальных вершин равна 0.
-	ver[s].height = ver.size();
-	//
+
+	vertex[indexStart].height = vertex.size();
 	for (int i = 0; i < edge.size(); i++)
 	{
-		// Если текущее ребро идет от источника
-		if (edge[i].uNumb == s)
+		if (edge[i].uNumb == indexStart)
 		{
-			// Поток равен емкости
 			edge[i].flow = edge[i].capacity;
-			// Инициализируем избыточный поток для соседнего v
-			ver[edge[i].vNumb].e_flow += edge[i].flow;
-			// Добавить ребро из v в s в остаточном графе с
-			// емкость равна 0
-			Edge ed;
-			ed.flow = -edge[i].flow;
-			ed.capacity = 0;
-			ed.uNumb = edge[i].vNumb;
-			ed.uName = ver[edge[i].vNumb].name;
-			ed.vNumb = s;
-			ed.vName = ver[s].name;
-			edge.push_back(ed);
+			vertex[edge[i].vNumb].eFlow += edge[i].flow;
+			Edge nEdge;
+			nEdge.flow = -edge[i].flow;
+			nEdge.capacity = 0;
+			nEdge.uNumb = edge[i].vNumb;
+			nEdge.uName = vertex[edge[i].vNumb].name;
+			nEdge.vNumb = indexStart;
+			nEdge.vName = vertex[indexStart].name;
+			edge.push_back(nEdge);
 		}
 	}
 }
 
-// Обновление обратного потока для потока, добавленного в ih Edge
-void Graph::updateReverseEdgeFlow(int i, int flow)
+void Graph::updateReverseEdgeFlow(int indexArr, int flow)
 {
-	int u = edge[i].vNumb;
-	int v = edge[i].uNumb;
+	int uNumb = edge[indexArr].vNumb;
+	int vNumb = edge[indexArr].uNumb;
 	for (int j = 0; j < edge.size(); j++)
 	{
-		if (edge[j].vNumb == v && edge[j].uNumb == u)
+		if (edge[j].vNumb == vNumb && edge[j].uNumb == uNumb)
 		{
 			edge[j].flow -= flow;
 			return;
 		}
 	}
-	// добавляем обратный край в остаточный график
-	
-	Edge ed;
-	ed.flow = 0;
-	ed.capacity = flow;
-	ed.uNumb = u;
-	ed.uName = ver[u].name;
-	ed.vNumb = v;
-	ed.vName = ver[v].name;
-	edge.push_back(ed);
+	Edge nEdge;
+	nEdge.flow = 0;
+	nEdge.capacity = flow;
+	nEdge.uNumb = uNumb;
+	nEdge.uName = vertex[uNumb].name;
+	nEdge.vNumb = vNumb;
+	nEdge.vName = vertex[vNumb].name;
+	edge.push_back(nEdge);
 }
-// Чтобы вытолкнуть поток из переполняющейся вершины u
-bool Graph::push(int u)
+
+bool Graph::push(int uNumb)
 {
-	// Пройдите через все ребра, чтобы найти соседний (из вас)
-	// к какому потоку можно подтолкнуть
 	for (int i = 0; i < edge.size(); i++)
 	{
-		// Проверяет u текущего ребра так же, как задано
-		// переполняющая вершина
-		if (edge[i].uNumb == u)
+		if (edge[i].uNumb == uNumb)
 		{
-			// если поток равен пропускной способности, то нет толчка
-			// возможно
 			if (edge[i].flow == edge[i].capacity)
 				continue;
-			// Push возможен только если высота смежных
-			// меньше высоты переполняющейся вершины
-			if (ver[u].height > ver[edge[i].vNumb].height)
+			if (vertex[uNumb].height > vertex[edge[i].vNumb].height)
 			{
-				// Поток, который нужно протолкнуть, равен минимуму
-				// оставшийся поток на краю и избыточный поток.
 				int flow = min(edge[i].capacity - edge[i].flow,
-					ver[u].e_flow);
-				// Уменьшаем лишний поток для переполняющейся вершины
-				ver[u].e_flow -= flow;
-				// Увеличить избыточный поток для соседних
-				ver[edge[i].vNumb].e_flow += flow;
-				// Добавить остаточный поток (с емкостью 0 и отрицательным
-				// течь)
+					vertex[uNumb].eFlow);//Единственная строка за которую могу пояснить
+				vertex[uNumb].eFlow -= flow;
+				vertex[edge[i].vNumb].eFlow += flow;
 				edge[i].flow += flow;
 				updateReverseEdgeFlow(i, flow);
 				return true;
@@ -248,34 +225,26 @@ bool Graph::push(int u)
 	}
 	return false;
 }
-// функция для перемаркировки вершины u
-void Graph::relabel(int u)
+void Graph::relabel(int uNumb)
 {
-	// Инициализируем минимальную высоту соседней
-	int mh = INT_MAX;
-	// Находим соседний с минимальной высотой
+	int maxHeight = INT_MAX;
 	for (int i = 0; i < edge.size(); i++)
 	{
-		if (edge[i].uNumb == u)
+		if (edge[i].uNumb == uNumb)
 		{
-			// если поток равен емкости, то нет
-			// перемаркировка
 			if (edge[i].flow == edge[i].capacity)
 				continue;
-			// Обновляем минимальную высоту
-			if (ver[edge[i].vNumb].height < mh)
+			if (vertex[edge[i].vNumb].height < maxHeight)
 			{
-				mh = ver[edge[i].vNumb].height;
-				// Обновление высоты вас
-				ver[u].height = mh + 1;
+				maxHeight = vertex[edge[i].vNumb].height;
+				vertex[uNumb].height = maxHeight + 1;
 			}
 		}
 	}
 }
-// основная функция для печати максимального потока графика
 int Graph::getMaxFlow()
 {
-	if (ver.size() == 0)
+	if (vertex.size() == 0)
 	{
 		throw out_of_range("Error - Vertex no create");
 	}
@@ -283,16 +252,13 @@ int Graph::getMaxFlow()
 	{
 		throw out_of_range("Error - Edges no create");
 	}
-	int s = 0;
-	preflow(s);
-	// цикл до тех пор, пока ни одна из вершин не будет переполнена
-	while (overFlowVertex(ver) != -1)
+	int indexStart = 0;
+	preflow(indexStart);
+	while (overFlowVertex(vertex) != -1)
 	{
-		int u = overFlowVertex(ver);
-		if (!push(u))
-			relabel(u);
+		int overFlowIndex = overFlowVertex(vertex);
+		if (!push(overFlowIndex))
+			relabel(overFlowIndex);
 	}
-	// ver.back () возвращает последнюю вершину, чья
-	// e_flow будет конечным максимальным потоком
-	return ver.back().e_flow;
+	return vertex.back().eFlow;
 }
