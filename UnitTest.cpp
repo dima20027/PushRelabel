@@ -99,5 +99,37 @@ namespace UnitTest
 			myGr.addEdge("C:\\Users\\hv200\\Desktop\\SCIENCE\\Programms\\4 sem - Kursach\\Kursach\\testTrue.txt");
 			Assert::AreEqual(5, myGr.getMaxFlow());
 		}
+
+		TEST_METHOD(flowMinusTest)
+		{
+			Graph myGr;
+			myGr.addVertex("C:\\Users\\hv200\\Desktop\\SCIENCE\\Programms\\4 sem - Kursach\\Kursach\\minusTest.txt");
+			myGr.addEdge("C:\\Users\\hv200\\Desktop\\SCIENCE\\Programms\\4 sem - Kursach\\Kursach\\minusTest.txt");
+			Assert::AreEqual(0, myGr.getMaxFlow());
+		}
+
+		TEST_METHOD(VertexNoEdgeTest)
+		{
+			Graph myGr;
+			myGr.addVertex("C:\\Users\\hv200\\Desktop\\SCIENCE\\Programms\\4 sem - Kursach\\Kursach\\NoEdge.txt");
+			myGr.addEdge("C:\\Users\\hv200\\Desktop\\SCIENCE\\Programms\\4 sem - Kursach\\Kursach\\NoEdge.txt");
+			Assert::AreEqual(0, myGr.getMaxFlow());
+		}
+
+		TEST_METHOD(NoflowTest)
+		{
+			Graph myGr;
+			try
+			{
+				myGr.addVertex("C:\\Users\\hv200\\Desktop\\SCIENCE\\Programms\\4 sem - Kursach\\Kursach\\noFlow.txt");
+				myGr.addEdge("C:\\Users\\hv200\\Desktop\\SCIENCE\\Programms\\4 sem - Kursach\\Kursach\\noFlow.txt");
+			}
+			catch (invalid_argument error)
+			{
+				Assert::AreEqual("Your file not correct - no Flow!", error.what());
+			}
+		}
+
+
 	};
 }
