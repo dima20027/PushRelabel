@@ -91,6 +91,10 @@ public:
 				throw invalid_argument("Your file not correct!");
 			}
 			file >> dt.capacity;
+			if (dt.capacity == -100)
+			{
+				throw invalid_argument("Your file not correct - no Flow!");
+			}
 			for (int i = 0; i < vertex.size(); i++)
 			{
 				if (vertex[i].name == dt.uName)
@@ -128,7 +132,7 @@ private:
 	struct Edge
 	{
 		int flow = 0;
-		int capacity = 0;
+		int capacity = -100;
 		char uName = ' ';
 		int uNumb = 0;
 		char vName = ' ';
